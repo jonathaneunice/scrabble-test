@@ -1,49 +1,51 @@
 
 
 import random
-import string
 from itertools import permutations
 from more_itertools import unique_everseen, powerset
+import textwrap
 
-
-from show.pretty import *
 
 DICTPATH = 'dictionary.txt'
 
 
+# load dictionary into memory
 with open(DICTPATH) as f:
-    words = f.read().splitlines()
-words = set(words)
+    DICT_WORDS = set(f.read().splitlines())
 
 
 def word_in_dict(word):
-    return word in words
+    """
+    Is given word (or tileset) in the dictionary?
+    """
+    if not isinstance(word, str):
+        word = ''.join(word)
+    return word in DICT_WORDS
 
 
-def tiles_in_dict(tiles):
-    word = ''.join(tiles).upper()
-    value =  word in words
-    return value
-
-
-def possible_words(tiles):
+def possible_words(letters):
+    """
+    Return list of all legal words made of the given letters.
+    """
     wordset = set()
-    pset = list(powerset(tiles))
-    for tileoption in pset:
-        if not tileoption:
+    # for all possible lengths of letters
+    for chosen_letters in powerset(letters):
+        if not chosen_letters:
             continue
-        for perm in list(permutations(tileoption)):
-            if not unique_everseen(perm):
-                continue
-            is_word = tiles_in_dict(perm)
-            if is_word:
-                wordset.add(perm)
-
+        # test all permutations of letters of given length not before seen
+        for tiles in unique_everseen(permutations(chosen_letters)):
+            if word_in_dict(tiles):
+                wordset.add(''.join(tiles))
     return sorted(wordset)
 
 
 if __name__ == '__main__':
-    tiles = list('andytrd')
-    print(f'words in tiles: {tiles}')
-    for w in possible_words(tiles):
-        print(''.join(w))
+    print()
+    letters = list('andytrd'.upper())
+    random.shuffle(letters)
+    print(f'letters: {letters}')
+    words = possible_words(letters)
+    print(f'{len(words)} words found:')
+    print(textwrap.fill(' '.join(words),
+                        initial_indent='    ',
+                        subsequent_indent='    '))
